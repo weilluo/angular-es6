@@ -1,0 +1,5 @@
+<div ng-repeat="instance in model">
+  <a ui-sref="instance({hostname: instance.hostname})">{{instance.hostname}}</a>
+</div>
+
+<div ui-view></div>
