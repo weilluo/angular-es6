@@ -1,10 +1,15 @@
-var randomstring = require("randomstring");
+'use strict';
+
+let randomstring = require("randomstring");
 
 module.exports = function(grunt) {
   grunt.initConfig({
     browserify: {
       dist: {
         options: {
+          browserifyOptions: {
+            debug: "<%= debug %>"
+          },
           transform: [[
             "babelify",
             {
@@ -32,32 +37,93 @@ module.exports = function(grunt) {
 
     concat: {
       js: {
+        options: {
+          separator: ';',
+        },
         src: [
           "bower_components/angular/angular.js",
-          "bower_components/angular-ui-router/release/angular-ui-router.js"
+          "bower_components/angular-ui-router/release/angular-ui-router.js",
+          'bower_components/angular-bootstrap/ui-bootstrap-tpls.js'
         ],
         dest: "tmp/assets/vendor.js"
+      },
+      css: {
+        src: [
+          'bower_components/bootstrap/dist/css/bootstrap.css'
+        ],
+        dest: 'tmp/assets/vendor.css'
+      }
+    },
+
+    copy: {
+      dev: {
+        files: [
+          {expand: true, flatten: true, src: ['bower_components/bootstrap/dist/fonts/**'], dest: 'tmp/assets/fonts', filter: 'isFile'}
+        ]
+      },
+
+      prod: {
+        files: [
+          {expand: true, flatten: true, src: ['bower_components/bootstrap/dist/fonts/**'], dest: 'dist/assets/fonts', filter: 'isFile'}
+        ]
+      }
+    },
+
+    cssmin: {
+      options: {
+        shorthandCompacting: false,
+        roundingPrecision: -1
+      },
+      build: {
+        files: {
+          'dist/assets/vendor<%= version %>.css': ['tmp/assets/vendor.css'],
+          'dist/assets/app<%= version %>.css': ['tmp/assets/app.css']
+        }
       }
     },
 
     ejs: {
-      all: {
-        options: {
-          version: "<%= version %>"
-        },
+      options: {
+        version: "<%= version %>"
+      },
+      dev: {
         src: ["app/index.ejs"],
         dest: "tmp/index.html"
+      },
+      prod: {
+        src: ["app/index.ejs"],
+        dest: "dist/index.html"
       }
     },
 
     html2js: {
       options: {
-        base: 'app'
-        // custom options, see below
+        base: "app"
       },
       main: {
         src: ["app/**/*.html"],
         dest: "tmp/assets/templates.js"
+      }
+    },
+
+    less: {
+      dist: {
+        files: {
+          'tmp/assets/app.css': 'app/styles/app.less'
+        }
+      }
+    },
+
+    uglify: {
+      options: {
+        mangle: false
+      },
+      build: {
+        files: {
+          'dist/assets/vendor<%= version %>.js': ['tmp/assets/vendor.js'],
+          'dist/assets/templates<%= version %>.js': ['tmp/assets/templates.js'],
+          'dist/assets/app<%= version %>.js': ['tmp/assets/app.js']
+        }
       }
     },
 
@@ -98,28 +164,26 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks("grunt-contrib-clean");
   grunt.loadNpmTasks("grunt-contrib-concat");
   grunt.loadNpmTasks("grunt-contrib-connect");
+  grunt.loadNpmTasks("grunt-contrib-copy");
+  grunt.loadNpmTasks("grunt-contrib-cssmin");
+  grunt.loadNpmTasks("grunt-contrib-less");
+  grunt.loadNpmTasks("grunt-contrib-uglify");
   grunt.loadNpmTasks("grunt-contrib-watch");
   grunt.loadNpmTasks("grunt-ejs");
   grunt.loadNpmTasks("grunt-html2js");
   grunt.loadNpmTasks('grunt-ng-annotate');
 
-  grunt.registerTask("gv", "Generate a assets version.", function(env) {
-    if (env === "dev") {
-      grunt.config.set("version", "");
-    } else if (env === "prod") {
-      grunt.config.set("version", "-" + randomstring.generate());
-    } else {
-      throw Error("Unkown params env = " + env + " for generate version task.");
-    }
-  });
-
   grunt.task.registerTask("build", "Build assets for app.", function(env) {
     if (env === "dev") {
-      grunt.task.run("clean:tmp", "gv:dev", "ejs", "html2js", "browserify", "concat");
+      grunt.config.set("version", "");
+      grunt.config.set("debug", true);
+      grunt.task.run("clean", `ejs:${env}`, `copy:${env}`, "html2js", "browserify", "concat", "less");
     } else if (env === "prod") {
-      grunt.task.run("clean", "gv:prod", "ejs", "copy_prod", "concat", "less", "uglify", "cssmin", "requirejs");
+      grunt.config.set("debug", false);
+      grunt.config.set("version", `-${randomstring.generate()}`);
+      grunt.task.run("clean", `ejs:${env}`, `copy:${env}`, "html2js", "browserify", "concat", "less", "ngAnnotate", "uglify", "cssmin");
     } else {
-      throw Error("Unkown params env = " + env + " for build assets task.");
+      throw Error(`Unkown params env = ${env} for build assets task.`);
     }
   });
 

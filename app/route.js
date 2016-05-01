@@ -1,4 +1,6 @@
-export default ($stateProvider, $urlRouterProvider) => {
+import app from './app';
+
+app.config(($stateProvider, $urlRouterProvider) => {
   // For any unmatched url, redirect to /
   $urlRouterProvider.otherwise('/');
   $urlRouterProvider.when('', '/');
@@ -27,4 +29,4 @@ export default ($stateProvider, $urlRouterProvider) => {
       templateUrl: 'instance/instance.html',
       controller: 'InstanceCtrl'
     });
-};
+});
