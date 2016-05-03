@@ -127,17 +127,6 @@ module.exports = function(grunt) {
       }
     },
 
-    ngAnnotate: {
-      options: {
-        singleQuotes: false,
-      },
-      dist: {
-        files: {
-          "tmp/assets/app.js": ["tmp/assets/app.js"]
-        },
-      }
-    },
-
     watch: {
       options: {
         spawn: true,
@@ -171,7 +160,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks("grunt-contrib-watch");
   grunt.loadNpmTasks("grunt-ejs");
   grunt.loadNpmTasks("grunt-html2js");
-  grunt.loadNpmTasks('grunt-ng-annotate');
 
   grunt.task.registerTask("build", "Build assets for app.", function(env) {
     if (env === "dev") {
@@ -181,7 +169,7 @@ module.exports = function(grunt) {
     } else if (env === "prod") {
       grunt.config.set("debug", false);
       grunt.config.set("version", `-${randomstring.generate()}`);
-      grunt.task.run("clean", `ejs:${env}`, `copy:${env}`, "html2js", "browserify", "concat", "less", "ngAnnotate", "uglify", "cssmin");
+      grunt.task.run("clean", `ejs:${env}`, `copy:${env}`, "html2js", "browserify", "concat", "less", "uglify", "cssmin");
     } else {
       throw Error(`Unkown params env = ${env} for build assets task.`);
     }
