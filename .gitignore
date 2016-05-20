@@ -5,3 +5,5 @@
 /dist
 /tmp
 tests/features/report.json
+
+app/main-temp.js

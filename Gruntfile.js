@@ -1,6 +1,8 @@
 'use strict';
 
-let randomstring = require("randomstring");
+const randomstring = require("randomstring");
+const getJsFiles = require('./angular-inject').getJsFiles;
+const generateDependences = require('./angular-inject').generateDependences;
 
 module.exports = function(grunt) {
   grunt.initConfig({
@@ -25,14 +27,15 @@ module.exports = function(grunt) {
           ]]
         },
         files: {
-          "tmp/assets/app.js": ["app/main.js"]
+          "tmp/assets/app.js": ["app/main-temp.js"]
         }
       }
     },
 
     clean: {
       tmp: ["tmp"],
-      dist: ["dist"]
+      dist: ["dist"],
+      mainTemp: ["app/main-temp.js"]
     },
 
     concat: {
@@ -64,6 +67,7 @@ module.exports = function(grunt) {
 
       prod: {
         files: [
+          {src: ['tmp/index.html'], dest: 'dist/index.html'},
           {expand: true, flatten: true, src: ['bower_components/bootstrap/dist/fonts/**'], dest: 'dist/assets/fonts', filter: 'isFile'}
         ]
       }
@@ -83,16 +87,19 @@ module.exports = function(grunt) {
     },
 
     ejs: {
-      options: {
-        version: "<%= version %>"
-      },
-      dev: {
+      indexHtml: {
+        options: {
+          version: "<%= version %>"
+        },
         src: ["app/index.ejs"],
         dest: "tmp/index.html"
       },
-      prod: {
-        src: ["app/index.ejs"],
-        dest: "dist/index.html"
+      mainJs: {
+        options: {
+          dependences: "<%= dependences %>"
+        },
+        src: ['app/main.ejs'],
+        dest: 'app/main-temp.js'
       }
     },
 
@@ -161,18 +168,28 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks("grunt-ejs");
   grunt.loadNpmTasks("grunt-html2js");
 
+  grunt.registerTask('injector', 'Angular auto inject.', function() {
+    var files = getJsFiles('app');
+    grunt.config.set('dependences', generateDependences(files));
+  });
+
   grunt.task.registerTask("build", "Build assets for app.", function(env) {
     if (env === "dev") {
       grunt.config.set("version", "");
       grunt.config.set("debug", true);
-      grunt.task.run("clean", `ejs:${env}`, `copy:${env}`, "html2js", "browserify", "concat", "less");
+      grunt.task.run("clean", "injector", "ejs", `copy:${env}`, "html2js", "browserify", "concat", "less");
     } else if (env === "prod") {
       grunt.config.set("debug", false);
       grunt.config.set("version", `-${randomstring.generate()}`);
-      grunt.task.run("clean", `ejs:${env}`, `copy:${env}`, "html2js", "browserify", "concat", "less", "uglify", "cssmin");
+      grunt.task.run("clean", "injector", "ejs", `copy:${env}`, "html2js", "browserify", "concat", "less", "uglify", "cssmin");
     } else {
       throw Error(`Unkown params env = ${env} for build assets task.`);
     }
+  });
+
+  grunt.registerTask("test11", function() {
+    var files = getJsFiles('app');
+    console.log(files);
   });
 
   grunt.registerTask("server", ["build:dev", "connect:server", "watch"]);
