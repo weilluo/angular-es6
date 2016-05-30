@@ -1,4 +1,4 @@
-export default [
-  '$scope',
-  ($scope) => {}
-];
+import app from '../app';
+
+app.controller('ApplicationCtrl', ($scope) => {
+});

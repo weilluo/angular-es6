@@ -1,7 +1,5 @@
-export default [
-  '$scope',
-  '$stateParams',
-  ($scope, $stateParams) => {
-    $scope.hostname = $stateParams.hostname;
-  }
-];
+import app from '../app';
+
+app.controller('InstanceCtrl', ($scope, $stateParams) => {
+  $scope.hostname = $stateParams.hostname;
+});

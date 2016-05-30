@@ -1,7 +1,7 @@
 describe('demoService test example', () => {
   let $service;
 
-  beforeEach(angular.mock.module('DemoAppTest'));
+  beforeEach(angular.mock.module('DemoApp'));
 
   beforeEach(angular.mock.inject((_demoService_) => {
       $service = _demoService_;

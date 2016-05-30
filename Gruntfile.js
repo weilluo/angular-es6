@@ -1,41 +1,47 @@
 'use strict';
 
-const randomstring = require("randomstring");
-const getJsFiles = require('./angular-inject').getJsFiles;
-const generateDependences = require('./angular-inject').generateDependences;
+const randomstring = require('randomstring');
 
 module.exports = function(grunt) {
   grunt.initConfig({
     browserify: {
-      dist: {
+      app: {
         options: {
           browserifyOptions: {
-            debug: "<%= debug %>"
+            debug: '<%= debug %>'
           },
           transform: [[
-            "babelify",
+            'babelify',
             {
-              "presets": ["es2015", "stage-3"],
-              "plugins": [[
-                "transform-runtime",
+              'presets': ['es2015', 'stage-3'],
+              'plugins': [[
+                'transform-runtime',
                 {
-                  "polyfill": false,
-                  "regenerator": true
+                  'polyfill': false,
+                  'regenerator': true
                 }
               ]]
             }
           ]]
         },
         files: {
-          "tmp/assets/app.js": ["app/main-temp.js"]
+          'tmp/assets/app.js': [ 'app/**/*.js' ]
         }
       }
     },
 
+    ngAnnotate: {
+      app: {
+        files: {
+          'tmp/assets/app.js': ['tmp/assets/app.js'],
+        }
+      },
+    },
+
     clean: {
-      tmp: ["tmp"],
-      dist: ["dist"],
-      mainTemp: ["app/main-temp.js"]
+      tmp: ['tmp'],
+      dist: ['dist'],
+      mainTemp: ['app/main-temp.js']
     },
 
     concat: {
@@ -44,11 +50,12 @@ module.exports = function(grunt) {
           separator: ';',
         },
         src: [
-          "bower_components/angular/angular.js",
-          "bower_components/angular-ui-router/release/angular-ui-router.js",
-          'bower_components/angular-bootstrap/ui-bootstrap-tpls.js'
+          'bower_components/angular/angular.js',
+          'bower_components/angular-ui-router/release/angular-ui-router.js',
+          'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
+          'bower_components/angular-deferred-bootstrap/angular-deferred-bootstrap.js',
         ],
-        dest: "tmp/assets/vendor.js"
+        dest: 'tmp/assets/vendor.js'
       },
       css: {
         src: [
@@ -89,27 +96,20 @@ module.exports = function(grunt) {
     ejs: {
       indexHtml: {
         options: {
-          version: "<%= version %>"
+          version: '<%= version %>'
         },
-        src: ["app/index.ejs"],
-        dest: "tmp/index.html"
-      },
-      mainJs: {
-        options: {
-          dependences: "<%= dependences %>"
-        },
-        src: ['app/main.ejs'],
-        dest: 'app/main-temp.js'
+        src: ['app/index.ejs'],
+        dest: 'tmp/index.html'
       }
     },
 
     html2js: {
       options: {
-        base: "app"
+        base: 'app'
       },
       main: {
-        src: ["app/**/*.html"],
-        dest: "tmp/assets/templates.js"
+        src: ['app/**/*.html'],
+        dest: 'tmp/assets/templates.js'
       }
     },
 
@@ -140,8 +140,8 @@ module.exports = function(grunt) {
         livereload: true
       },
       src: {
-        files: ["app/index.ejs", "app/**/*.js", "app/**/*.html", "app/**/*.less"],
-        tasks: ["build:dev"]
+        files: ['app/index.ejs', 'app/**/*.js', 'app/**/*.html', 'app/**/*.less'],
+        tasks: ['build:dev']
       }
     },
 
@@ -150,47 +150,38 @@ module.exports = function(grunt) {
         options: {
           livereload: true,
           port: 4200,
-          base: "tmp"
+          base: 'tmp'
         }
       }
     }
   });
 
-  grunt.loadNpmTasks("grunt-browserify");
-  grunt.loadNpmTasks("grunt-contrib-clean");
-  grunt.loadNpmTasks("grunt-contrib-concat");
-  grunt.loadNpmTasks("grunt-contrib-connect");
-  grunt.loadNpmTasks("grunt-contrib-copy");
-  grunt.loadNpmTasks("grunt-contrib-cssmin");
-  grunt.loadNpmTasks("grunt-contrib-less");
-  grunt.loadNpmTasks("grunt-contrib-uglify");
-  grunt.loadNpmTasks("grunt-contrib-watch");
-  grunt.loadNpmTasks("grunt-ejs");
-  grunt.loadNpmTasks("grunt-html2js");
+  grunt.loadNpmTasks('grunt-browserify');
+  grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-cssmin');
+  grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-ejs');
+  grunt.loadNpmTasks('grunt-html2js');
+  grunt.loadNpmTasks('grunt-ng-annotate');
 
-  grunt.registerTask('injector', 'Angular auto inject.', function() {
-    var files = getJsFiles('app');
-    grunt.config.set('dependences', generateDependences(files));
-  });
-
-  grunt.task.registerTask("build", "Build assets for app.", function(env) {
-    if (env === "dev") {
-      grunt.config.set("version", "");
-      grunt.config.set("debug", true);
-      grunt.task.run("clean", "injector", "ejs", `copy:${env}`, "html2js", "browserify", "concat", "less");
-    } else if (env === "prod") {
-      grunt.config.set("debug", false);
-      grunt.config.set("version", `-${randomstring.generate()}`);
-      grunt.task.run("clean", "injector", "ejs", `copy:${env}`, "html2js", "browserify", "concat", "less", "uglify", "cssmin");
+  grunt.task.registerTask('build', 'Build assets for app.', function(env) {
+    if (env === 'dev') {
+      grunt.config.set('version', '');
+      grunt.config.set('debug', true);
+      grunt.task.run('clean', 'ejs', `copy:${env}`, 'html2js', 'browserify', 'ngAnnotate', 'concat', 'less');
+    } else if (env === 'prod') {
+      grunt.config.set('debug', false);
+      grunt.config.set('version', `-${randomstring.generate()}`);
+      grunt.task.run('clean', 'ejs', `copy:${env}`, 'html2js', 'browserify', 'ngAnnotate', 'concat', 'less', 'uglify', 'cssmin');
     } else {
       throw Error(`Unkown params env = ${env} for build assets task.`);
     }
   });
 
-  grunt.registerTask("test11", function() {
-    var files = getJsFiles('app');
-    console.log(files);
-  });
-
-  grunt.registerTask("server", ["build:dev", "connect:server", "watch"]);
+  grunt.registerTask('server', ['build:dev', 'connect:server', 'watch']);
 };

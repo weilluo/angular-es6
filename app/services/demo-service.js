@@ -1,9 +1,9 @@
-export default [
-  () => {
-    return {
-      exmapleMethod() {
-        return "karma test method";
-      }
-    };
-  }
-];
+import app from '../app';
+
+app.factory('demoService', () => {
+  return {
+    exmapleMethod() {
+      return "karma test method";
+    }
+  };
+});
