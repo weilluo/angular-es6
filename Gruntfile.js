@@ -5,25 +5,36 @@ const randomstring = require('randomstring');
 module.exports = function(grunt) {
   grunt.initConfig({
     browserify: {
-      app: {
+      options: {
+        transform: [[
+          'babelify',
+          {
+            'presets': ['es2015', 'stage-3'],
+            'plugins': [[
+              'transform-runtime',
+              {
+                'polyfill': false,
+                'regenerator': true
+              }
+            ]]
+          }
+        ]]
+      },
+      dev: {
         options: {
           browserifyOptions: {
-            debug: '<%= debug %>'
+            debug: true
           },
-          transform: [[
-            'babelify',
-            {
-              'presets': ['es2015', 'stage-3'],
-              'plugins': [[
-                'transform-runtime',
-                {
-                  'polyfill': false,
-                  'regenerator': true
-                }
-              ]]
-            }
-          ]]
+          watch: true,
+          ignore: [
+            // path.resolve(__dirname, 'app/app.js')
+          ]
         },
+        files: {
+          'tmp/assets/app.js': [ 'app/**/*.js' ]
+        }
+      },
+      prod: {
         files: {
           'tmp/assets/app.js': [ 'app/**/*.js' ]
         }
@@ -41,7 +52,10 @@ module.exports = function(grunt) {
     clean: {
       tmp: ['tmp'],
       dist: ['dist'],
-      mainTemp: ['app/main-temp.js']
+      index: ['tmp/index.html'],
+      js: ['tmp/assets/app.js'],
+      less: ['tmp/assets/app.css'],
+      template: ['tmp/assets/templates.js']
     },
 
     concat: {
@@ -135,12 +149,32 @@ module.exports = function(grunt) {
 
     watch: {
       options: {
-        spawn: true,
         livereload: true
       },
-      src: {
-        files: ['app/index.ejs', 'app/**/*.js', 'app/**/*.html', 'app/**/*.less'],
-        tasks: ['build:dev']
+      index: {
+        files: ['app/index.ejs'],
+        tasks: ['clean:index', 'ejs', `copy:dev`]
+      },
+      js: {
+        files: ['tmp/assets/app.js', 'public/js/**/*.js'],
+        tasks: ['jshint'],
+        options: {
+          spawn: false
+        }
+      },
+      less: {
+        files: ['app/**/*.less'],
+        tasks: ['clean:less', 'less'],
+        options: {
+          spawn: false
+        }
+      },
+      template: {
+        files: ['app/**/*.html'],
+        tasks: ['clean:template', 'html2js'],
+        options: {
+          spawn: false
+        }
       }
     },
 
@@ -152,6 +186,14 @@ module.exports = function(grunt) {
           base: 'tmp'
         }
       }
+    },
+
+    jshint: {
+      options: {
+        jshintrc: true,
+        reporter: require('jshint-stylish')
+      },
+      app: ['app/**/*.js']
     }
   });
 
@@ -162,21 +204,20 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-ejs');
   grunt.loadNpmTasks('grunt-html2js');
   grunt.loadNpmTasks('grunt-ng-annotate');
 
-  grunt.task.registerTask('build', 'Build assets for app.', function(env) {
+  grunt.registerTask('build', 'Build assets for app.', (env) => {
     if (env === 'dev') {
       grunt.config.set('version', '');
-      grunt.config.set('debug', true);
-      grunt.task.run('clean', 'ejs', `copy:${env}`, 'html2js', 'browserify', 'ngAnnotate', 'concat', 'less');
+      grunt.task.run('clean', 'ejs', `copy:dev`, 'html2js', 'browserify:dev', 'less', 'concat');
     } else if (env === 'prod') {
-      grunt.config.set('debug', false);
       grunt.config.set('version', `-${randomstring.generate()}`);
-      grunt.task.run('clean', 'ejs', `copy:${env}`, 'html2js', 'browserify', 'ngAnnotate', 'concat', 'less', 'uglify', 'cssmin');
+      grunt.task.run('clean', 'ejs', `copy:prod`, 'html2js', 'browserify:prod', 'less', 'ngAnnotate', 'concat', 'uglify', 'cssmin');
     } else {
       throw Error(`Unkown params env = ${env} for build assets task.`);
     }

@@ -6,8 +6,8 @@ app.directive('test1', () => {
     scope: {
       name: '@'
     },
-    link: function (scope, element, attrs) {
+    link: function () {
     },
     templateUrl: 'directives/test1.html'
-  }
+  };
 });
