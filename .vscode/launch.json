@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceRoot}",
+      "sourceMapPathOverrides": {
+        "app/*": "${webRoot}/app/*"
+      },
+      "name": "Launch Chrome"
+    }
+  ]
+}

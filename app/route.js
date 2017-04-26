@@ -1,4 +1,4 @@
-import app from './app';
+import app from '/app';
 
 app.config(($stateProvider, $urlRouterProvider) => {
   // For any unmatched url, redirect to /

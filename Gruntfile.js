@@ -6,19 +6,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     browserify: {
       options: {
-        transform: [[
-          'babelify',
-          {
-            'presets': ['es2015', 'stage-3'],
-            'plugins': [[
-              'transform-runtime',
-              {
-                'polyfill': false,
-                'regenerator': true
-              }
-            ]]
-          }
-        ]]
+        transform: [['babelify']]
       },
       dev: {
         options: {
@@ -37,6 +25,15 @@ module.exports = function(grunt) {
       prod: {
         files: {
           'tmp/assets/app.js': [ 'app/**/*.js' ]
+        }
+      }
+    },
+
+    exorcise: {
+      default: {
+        options: {},
+        files: {
+          'tmp/assets/app.js.map': ['tmp/assets/app.js'],
         }
       }
     },
@@ -208,13 +205,14 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-ejs');
+  grunt.loadNpmTasks('grunt-exorcise');
   grunt.loadNpmTasks('grunt-html2js');
   grunt.loadNpmTasks('grunt-ng-annotate');
 
   grunt.registerTask('build', 'Build assets for app.', (env) => {
     if (env === 'dev') {
       grunt.config.set('version', '');
-      grunt.task.run('clean', 'ejs', `copy:dev`, 'html2js', 'browserify:dev', 'less', 'concat');
+      grunt.task.run('clean', 'ejs', `copy:dev`, 'html2js', 'browserify:dev', /*exorcise,*/ 'less', 'concat');
     } else if (env === 'prod') {
       grunt.config.set('version', `-${randomstring.generate()}`);
       grunt.task.run('clean', 'ejs', `copy:prod`, 'html2js', 'browserify:prod', 'less', 'ngAnnotate', 'concat', 'uglify', 'cssmin');

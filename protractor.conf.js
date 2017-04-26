@@ -13,7 +13,7 @@ exports.config = {
     format: 'pretty'
   },
   capabilities: {
-    browserName: 'firefox'
+    browserName: 'chrome'
   },
   baseUrl: 'http://localhost:4200',
   resultJsonOutputFile: 'tests/features/report.json',

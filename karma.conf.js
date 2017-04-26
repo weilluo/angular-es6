@@ -15,23 +15,7 @@ module.exports = function(config) {
     },
 
     browserify: {
-      transform: [
-        [
-          "babelify",
-          {
-            "presets": ["es2015", "stage-3"],
-            "plugins": [
-              [
-                "transform-runtime",
-                {
-                  "polyfill": false,
-                  "regenerator": true
-                }
-              ]
-            ]
-          }
-        ]
-      ]
+      transform: [["babelify"]]
     },
 
     ngHtml2JsPreprocessor: {

@@ -1,4 +1,4 @@
-import app from '../app';
+import app from '/app';
 
-app.controller('ApplicationCtrl', ($scope) => {
+app.controller('ApplicationCtrl', () => {
 });
